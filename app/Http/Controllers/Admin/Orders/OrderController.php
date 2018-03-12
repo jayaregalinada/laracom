@@ -2,37 +2,48 @@
 
 namespace App\Http\Controllers\Admin\Orders;
 
-use App\Addresses\Address;
-use App\Addresses\Repositories\Interfaces\AddressRepositoryInterface;
-use App\Couriers\Courier;
-use App\Couriers\Repositories\Interfaces\CourierRepositoryInterface;
-use App\Customers\Customer;
-use App\Customers\Repositories\Interfaces\CustomerRepositoryInterface;
-use App\Orders\Order;
-use App\Orders\Repositories\Interfaces\OrderRepositoryInterface;
-use App\OrderStatuses\OrderStatus;
-use App\PaymentMethods\PaymentMethod;
-use Illuminate\Http\Request;
+use App\Shop\Addresses\Repositories\Interfaces\AddressRepositoryInterface;
+use App\Shop\Addresses\Transformations\AddressTransformable;
+use App\Shop\Couriers\Courier;
+use App\Shop\Couriers\Repositories\CourierRepository;
+use App\Shop\Couriers\Repositories\Interfaces\CourierRepositoryInterface;
+use App\Shop\Customers\Customer;
+use App\Shop\Customers\Repositories\CustomerRepository;
+use App\Shop\Customers\Repositories\Interfaces\CustomerRepositoryInterface;
+use App\Shop\Orders\Order;
+use App\Shop\Orders\Repositories\Interfaces\OrderRepositoryInterface;
+use App\Shop\OrderStatuses\OrderStatus;
+use App\Shop\OrderStatuses\Repositories\Interfaces\OrderStatusRepositoryInterface;
+use App\Shop\OrderStatuses\Repositories\OrderStatusRepository;
+use App\Shop\PaymentMethods\Repositories\Interfaces\PaymentMethodRepositoryInterface;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Collection;
 
 class OrderController extends Controller
 {
+    use AddressTransformable;
+
     private $orderRepo;
     private $courierRepo;
     private $addressRepo;
     private $customerRepo;
+    private $orderStatusRepo;
+    private $paymentRepo;
 
     public function __construct(
         OrderRepositoryInterface $orderRepository,
         CourierRepositoryInterface $courierRepository,
         AddressRepositoryInterface $addressRepository,
-        CustomerRepositoryInterface $customerRepository
-    )
-    {
+        CustomerRepositoryInterface $customerRepository,
+        OrderStatusRepositoryInterface $orderStatusRepository,
+        PaymentMethodRepositoryInterface $paymentMethodRepository
+    ) {
         $this->orderRepo = $orderRepository;
         $this->courierRepo = $courierRepository;
         $this->addressRepo = $addressRepository;
         $this->customerRepo = $customerRepository;
+        $this->orderStatusRepo = $orderStatusRepository;
+        $this->paymentRepo = $paymentMethodRepository;
     }
 
     /**
@@ -43,29 +54,14 @@ class OrderController extends Controller
     public function index()
     {
         $list = $this->orderRepo->listOrders('created_at', 'desc');
-        $list->map(function (Order $order) {
-            $order->courier = Courier::find($order->courier_id);
-            $order->customer = Customer::find($order->customer_id);
-            $order->address = Address::find($order->address_id);
-            $order->status = OrderStatus::find($order->order_status_id);
-            $order->payment = PaymentMethod::find($order->payment_method_id);
-            return $order;
-        });
 
-        $orders = $this->orderRepo->paginateArrayResults($list->all(), 25);
+        if (request()->has('q')) {
+            $list = $this->orderRepo->searchOrder(request()->input('q') ?? '');
+        }
+
+        $orders = $this->orderRepo->paginateArrayResults($this->transFormOrder($list), 10);
 
         return view('admin.orders.list', ['orders' => $orders]);
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        //
     }
 
     /**
@@ -79,47 +75,56 @@ class OrderController extends Controller
         $order = $this->orderRepo->findOrderById($id);
         $order->courier = $this->courierRepo->findCourierById($order->courier_id);
         $order->address = $this->addressRepo->findAddressById($order->address_id);
-        $customer = $this->customerRepo->findCustomerById($order->customer_id);
 
-        $items = $this->orderRepo->findProducts($order);
         return view('admin.orders.show', [
             'order' => $order,
-            'items' => $items,
-            'customer' => $customer
+            'items' => $this->orderRepo->findProducts($order),
+            'customer' => $this->customerRepo->findCustomerById($order->customer_id),
+            'currentStatus' => $this->orderStatusRepo->findOrderStatusById($order->order_status_id),
+            'payment' => $this->paymentRepo->findPaymentMethodById($order->payment_method_id)
         ]);
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Generate order invoice
      *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @param int $id
+     * @return mixed
      */
-    public function edit($id)
+    public function generateInvoice(int $id)
     {
-        //
+        $order = $this->orderRepo->findOrderById($id);
+
+        $data = [
+            'order' => $order,
+            'products' => $order->products,
+            'customer' => $order->customer,
+            'courier' => $order->courier,
+            'address' => $this->transformAddress($order->address),
+            'status' => $order->orderStatus,
+            'payment' => $order->paymentMethod
+        ];
+
+        $pdf = app()->make('dompdf.wrapper');
+        $pdf->loadView('invoices.orders', $data)->stream();
+        return $pdf->stream();
     }
 
     /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @param Collection $list
+     * @return array
      */
-    public function update(Request $request, $id)
+    private function transFormOrder(Collection $list)
     {
-        //
-    }
+        $courierRepo = new CourierRepository(new Courier());
+        $customerRepo = new CustomerRepository(new Customer());
+        $orderStatusRepo = new OrderStatusRepository(new OrderStatus());
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
+        return $list->transform(function (Order $order) use ($courierRepo, $customerRepo, $orderStatusRepo) {
+            $order->courier = $courierRepo->findCourierById($order->courier_id);
+            $order->customer = $customerRepo->findCustomerById($order->customer_id);
+            $order->status = $orderStatusRepo->findOrderStatusById($order->order_status_id);
+            return $order;
+        })->all();
     }
 }

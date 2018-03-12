@@ -2,27 +2,42 @@
 
 namespace App\Http\Controllers\Admin\Products;
 
-use App\Categories\Repositories\Interfaces\CategoryRepositoryInterface;
-use App\Products\Repositories\Interfaces\ProductRepositoryInterface;
-use App\Products\Repositories\ProductRepository;
-use App\Products\Requests\CreateProductRequest;
-use App\Products\Requests\UpdateProductRequest;
+use App\Shop\Categories\Category;
+use App\Shop\Categories\Repositories\Interfaces\CategoryRepositoryInterface;
+use App\Shop\ProductImages\ProductImage;
+use App\Shop\Products\Product;
+use App\Shop\Products\Repositories\Interfaces\ProductRepositoryInterface;
+use App\Shop\Products\Repositories\ProductRepository;
+use App\Shop\Products\Requests\CreateProductRequest;
+use App\Shop\Products\Requests\UpdateProductRequest;
 use App\Http\Controllers\Controller;
-use App\Tools\CurrencyTransformable;
+use App\Shop\Products\Transformations\ProductTransformable;
+use App\Shop\Tools\UploadableTrait;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 
 class ProductController extends Controller
 {
-    use CurrencyTransformable;
+    use ProductTransformable, UploadableTrait;
 
+    /**
+     * @var ProductRepositoryInterface
+     */
     private $productRepo;
+    /**
+     * @var CategoryRepositoryInterface
+     */
     private $categoryRepo;
 
+    /**
+     * ProductController constructor.
+     * @param ProductRepositoryInterface $productRepository
+     * @param CategoryRepositoryInterface $categoryRepository
+     */
     public function __construct(
         ProductRepositoryInterface $productRepository,
         CategoryRepositoryInterface $categoryRepository
-    )
-    {
+    ) {
         $this->productRepo = $productRepository;
         $this->categoryRepo = $categoryRepository;
     }
@@ -34,10 +49,18 @@ class ProductController extends Controller
      */
     public function index()
     {
-        $collection = $this->productRepo->listProducts('id', true);
+        $list = $this->productRepo->listProducts('id');
+
+        if (request()->has('q') && request()->input('q') != '') {
+            $list = $this->productRepo->searchProduct(request()->input('q'));
+        }
+
+        $products = $list->map(function (Product $item) {
+            return $this->transformProduct($item);
+        })->all();
 
         return view('admin.products.list', [
-            'products' => $this->productRepo->paginateArrayResults($collection, 10)
+            'products' => $this->productRepo->paginateArrayResults($products, 10)
         ]);
     }
 
@@ -48,7 +71,10 @@ class ProductController extends Controller
      */
     public function create()
     {
-        return view('admin.products.create');
+        return view('admin.products.create', [
+            'categories' => $this->categoryRepo->listCategories('name', 'asc')->where('parent_id', 1),
+            'selectedIds' => []
+        ]);
     }
 
     /**
@@ -59,47 +85,52 @@ class ProductController extends Controller
      */
     public function store(CreateProductRequest $request)
     {
-        $this->productRepo->createProduct($request->all());
+        $data = $request->except('_token', '_method');
+        $data['slug'] = str_slug($request->input('name'));
 
-        return redirect()->route('admin.products.index');
+        if ($request->hasFile('cover') && $request->file('cover') instanceof UploadedFile) {
+            $data['cover'] = $this->productRepo->saveCoverImage($request->file('cover'));
+        }
+
+        $product = $this->productRepo->createProduct($data);
+        $this->saveProductImages($request, $product);
+
+        if ($request->has('categories')) {
+            $product->categories()->sync($request->input('categories'));
+        } else {
+            $product->categories()->detach();
+        }
+
+        $request->session()->flash('message', 'Create successful');
+        return redirect()->route('admin.products.edit', $product->id);
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param  int $id
      * @return \Illuminate\Http\Response
      */
     public function show(int $id)
     {
-        $product = $this->productRepo->findProductById($id);
-
-        return view('admin.products.show', [
-            'product' => $product
-        ]);
+        return view('admin.products.show', ['product' => $this->productRepo->findProductById($id)]);
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
+     * @param  int $id
      * @return \Illuminate\Http\Response
      */
     public function edit(int $id)
     {
         $product = $this->productRepo->findProductById($id);
 
-        $productCategories = $product->categories;
-
-        $ids = [];
-        foreach ($productCategories as $category) {
-            $ids[] = $category->id;
-        }
-
         return view('admin.products.edit', [
             'product' => $product,
-            'categories' => $this->categoryRepo->listCategories('name', 'asc'),
-            'selectCategories' => $ids
+            'images' => $product->images()->get(['src']),
+            'categories' => $this->categoryRepo->listCategories('name', 'asc')->where('parent_id', 1),
+            'selectedIds' => $product->categories()->pluck('category_id')->all()
         ]);
     }
 
@@ -107,23 +138,28 @@ class ProductController extends Controller
      * Update the specified resource in storage.
      *
      * @param  UpdateProductRequest $request
-     * @param  int  $id
+     * @param  int $id
      * @return \Illuminate\Http\Response
      */
     public function update(UpdateProductRequest $request, int $id)
     {
         $product = $this->productRepo->findProductById($id);
 
-        $update = new ProductRepository($product);
+        $data = $request->except('categories', '_token', '_method');
+        $data['slug'] = str_slug($request->input('name'));
 
-        $update->updateProduct($request->except('categories'));
+        if ($request->hasFile('cover') && $request->file('cover') instanceof UploadedFile) {
+            $data['cover'] = $this->productRepo->saveCoverImage($request->file('cover'));
+        }
+
+        $this->saveProductImages($request, $product);
+
+        $this->productRepo->updateProduct($data, $id);
 
         if ($request->has('categories')) {
-            $collection = collect($request->input('categories'));
-            $categories = $collection->all();
-            $update->syncCategories($categories);
+            $product->categories()->sync($request->input('categories'));
         } else {
-            $update->detachCategories($product);
+            $product->categories()->detach();
         }
 
         $request->session()->flash('message', 'Update successful');
@@ -133,13 +169,14 @@ class ProductController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  int $id
      * @return \Illuminate\Http\Response
      */
     public function destroy($id)
     {
         $product = $this->productRepo->findProductById($id);
         $product->categories()->sync([]);
+
         $this->productRepo->delete($id);
 
         request()->session()->flash('message', 'Delete successful');
@@ -155,5 +192,27 @@ class ProductController extends Controller
         $this->productRepo->deleteFile($request->only('product', 'image'), 'uploads');
         request()->session()->flash('message', 'Image delete successful');
         return redirect()->back();
+    }
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function removeThumbnail(Request $request)
+    {
+        $this->productRepo->deleteThumb($request->input('src'));
+        request()->session()->flash('message', 'Image delete successful');
+        return redirect()->back();
+    }
+
+    /**
+     * @param Request $request
+     * @param Product $product
+     */
+    private function saveProductImages(Request $request, Product $product)
+    {
+        if ($request->hasFile('image')) {
+            $this->productRepo->saveProductImages(collect($request->file('image')), $product);
+        }
     }
 }

@@ -2,25 +2,24 @@
 
 namespace Tests;
 
-use App\Addresses\Address;
-use App\Categories\Category;
-use App\Couriers\Courier;
-use App\Couriers\Repositories\CourierRepository;
-use App\Employees\Employee;
-use App\Customers\Customer;
-use App\OrderStatuses\OrderStatus;
-use App\OrderStatuses\Repositories\OrderStatusRepository;
-use App\PaymentMethods\PaymentMethod;
-use App\PaymentMethods\Repositories\PaymentMethodRepository;
-use App\Products\Product;
-use App\Provinces\Province;
+use App\Shop\Categories\Category;
+use App\Shop\Couriers\Courier;
+use App\Shop\Couriers\Repositories\CourierRepository;
+use App\Shop\Employees\Employee;
+use App\Shop\Customers\Customer;
+use App\Shop\Employees\Repositories\EmployeeRepository;
+use App\Shop\OrderStatuses\OrderStatus;
+use App\Shop\OrderStatuses\Repositories\OrderStatusRepository;
+use App\Shop\PaymentMethods\PaymentMethod;
+use App\Shop\PaymentMethods\Repositories\PaymentMethodRepository;
+use App\Shop\Products\Product;
+use App\Shop\Roles\Repositories\RoleRepository;
+use App\Shop\Roles\Role;
 use Gloudemans\Shoppingcart\Cart;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Faker\Factory as Faker;
-use App\Cities\City;
-use App\Countries\Country;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -49,6 +48,15 @@ abstract class TestCase extends BaseTestCase
 
         $this->faker = Faker::create();
         $this->employee = factory(Employee::class)->create();
+
+        $adminData = ['name' => 'admin'];
+
+        $roleRepo = new RoleRepository(new Role);
+        $admin = $roleRepo->createRole($adminData);
+
+        $employeeRepo = new EmployeeRepository($this->employee);
+        $employeeRepo->syncRoles([$admin->id]);
+
         $this->product = factory(Product::class)->create();
         $this->category = factory(Category::class)->create();
         $this->customer = factory(Customer::class)->create();

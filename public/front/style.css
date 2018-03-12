@@ -81,6 +81,14 @@ li.active a {
     color: #d89522;
     background: #eee;
 }
+ul.sidebar-menu li a {
+    display: block;
+    padding: 3px 10px;
+    margin: 3px 0;
+}
+ul.sidebar-category-sub li {
+    padding-left: 15px;
+}
 
 ul.navbar-nav > li.active > a {
     color: #d89522 !important;
@@ -133,7 +141,6 @@ ul.navbar-nav > li.active > a {
 .navbar-default {
     background-color: transparent !important;
     border: none;
-    padding-top: 20px;
 }
 
 ul.navbar-nav li a{
@@ -470,7 +477,11 @@ li.menubar-cart a {
     width: 390px;
     margin: 50px auto 0;
 }
-input, input[type="text"], input[type="email"], textarea, select {
+input,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea, select {
     border: 1px solid #d89522;
     background: #fff;
     border-radius: 3px !important;
@@ -569,4 +580,14 @@ a:hover img {
 
 .product-list {
     min-height: 400px;
+}
+
+.nav.navbar-nav .dropdown {
+    top:11px;
+}
+.form-inline #search-btn {
+    border-top: 1px solid #d89522;
+    border-right: 1px solid #d89522;
+    border-bottom: 1px solid #d89522;
+    border-left: 1px solid #d8cab2;
 }

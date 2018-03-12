@@ -12,7 +12,7 @@
 */
 
 /** @var \Illuminate\Database\Eloquent\Factory $factory */
-use App\Customers\Customer;
+use App\Shop\Customers\Customer;
 
 $factory->define(Customer::class, function (Faker\Generator $faker) {
     static $password;
@@ -22,5 +22,6 @@ $factory->define(Customer::class, function (Faker\Generator $faker) {
         'email' => $faker->unique()->safeEmail,
         'password' => $password ?: $password = bcrypt('secret'),
         'remember_token' => str_random(10),
+        'status' => 1
     ];
 });

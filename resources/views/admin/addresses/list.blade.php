@@ -9,27 +9,28 @@
             <div class="box">
                 <div class="box-body">
                     <h2>Addresses</h2>
+                    @include('layouts.search', ['route' => route('admin.addresses.index')])
                     <table class="table">
-                        <tbody>
-                        <tr>
-                            <td class="col-md-1">Alias</td>
-                            <td class="col-md-2">Address 1</td>
-                            <td class="col-md-1">Country</td>
-                            <td class="col-md-2">Province</td>
-                            <td class="col-md-1">City</td>
-                            <td class="col-md-1">Zip Code</td>
-                            <td class="col-md-1">Status</td>
-                            <td class="col-md-3">Actions</td>
-                        </tr>
-                        </tbody>
+                        <thead>
+                            <tr>
+                                <td class="col-md-1">Alias</td>
+                                <td class="col-md-2">Address 1</td>
+                                <td class="col-md-1">Country</td>
+                                <td class="col-md-2">Province</td>
+                                <td class="col-md-1">City</td>
+                                <td class="col-md-1">Zip Code</td>
+                                <td class="col-md-1">Status</td>
+                                <td class="col-md-3">Actions</td>
+                            </tr>
+                        </thead>
                         <tbody>
                         @foreach ($addresses as $address)
                             <tr>
-                                <td><a href="{{ route('admin.customers.show', $address->customer_id) }}">{{ $address->alias }}</a></td>
+                                <td><a href="{{ route('admin.customers.show', [$address->customer_id]) }}">{{ $address->alias }}</a></td>
                                 <td>{{ $address->address_1 }}</td>
-                                <td>{{ $address->country->name }}</td>
-                                <td>{{ $address->province->name }}</td>
-                                <td>{{ $address->city->name }}</td>
+                                <td>{{ $address->country }}</td>
+                                <td>{{ $address->province }}</td>
+                                <td>{{ $address->city }}</td>
                                 <td>{{ $address->zip }}</td>
                                 <td>@include('layouts.status', ['status' => $address->status])</td>
                                 <td>
@@ -46,6 +47,13 @@
                         @endforeach
                         </tbody>
                     </table>
+                    @if($addresses instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator)
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="pull-left">{{ $addresses->links() }}</div>
+                            </div>
+                        </div>
+                    @endif
                 </div>
                 <!-- /.box-body -->
             </div>

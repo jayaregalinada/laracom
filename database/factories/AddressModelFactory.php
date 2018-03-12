@@ -12,17 +12,11 @@
 */
 
 /** @var \Illuminate\Database\Eloquent\Factory $factory */
-use App\Addresses\Address;
-use App\Customers\Customer;
-use App\Provinces\Province;
-use App\Cities\City;
-use App\Countries\Country;
+use App\Shop\Addresses\Address;
+use App\Shop\Customers\Customer;
 
 $factory->define(Address::class, function (Faker\Generator $faker) {
 
-    $country = factory(Country::class)->create();
-    $province = factory(Province::class)->create();
-    $city = factory(City::class)->create();
     $customer = factory(Customer::class)->create();
 
     return [
@@ -30,9 +24,9 @@ $factory->define(Address::class, function (Faker\Generator $faker) {
         'address_1' => $faker->streetName,
         'address_2' => $faker->streetAddress,
         'zip' => $faker->postcode,
-        'city_id' => $city->id,
-        'province_id' => $province->id,
-        'country_id' => $country->id,
+        'city_id' => 1,
+        'province_id' => 1,
+        'country_id' => 1,
         'customer_id' => $customer->id,
         'status' => 1
     ];

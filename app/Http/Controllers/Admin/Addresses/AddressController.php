@@ -2,18 +2,20 @@
 
 namespace App\Http\Controllers\Admin\Addresses;
 
-use App\Addresses\Repositories\AddressRepository;
-use App\Addresses\Repositories\Interfaces\AddressRepositoryInterface;
-use App\Addresses\Requests\CreateAddressRequest;
-use App\Addresses\Requests\UpdateAddressRequest;
-use App\Addresses\Transformations\AddressTransformable;
-use App\Cities\City;
-use App\Cities\Repositories\Interfaces\CityRepositoryInterface;
-use App\Countries\Repositories\CountryRepository;
-use App\Countries\Repositories\Interfaces\CountryRepositoryInterface;
-use App\Customers\Repositories\Interfaces\CustomerRepositoryInterface;
+use App\Shop\Addresses\Address;
+use App\Shop\Addresses\Repositories\AddressRepository;
+use App\Shop\Addresses\Repositories\Interfaces\AddressRepositoryInterface;
+use App\Shop\Addresses\Requests\CreateAddressRequest;
+use App\Shop\Addresses\Requests\UpdateAddressRequest;
+use App\Shop\Addresses\Transformations\AddressTransformable;
+use App\Shop\Cities\City;
+use App\Shop\Cities\Repositories\Interfaces\CityRepositoryInterface;
+use App\Shop\Countries\Country;
+use App\Shop\Countries\Repositories\CountryRepository;
+use App\Shop\Countries\Repositories\Interfaces\CountryRepositoryInterface;
+use App\Shop\Customers\Repositories\Interfaces\CustomerRepositoryInterface;
 use App\Http\Controllers\Controller;
-use App\Provinces\Repositories\Interfaces\ProvinceRepositoryInterface;
+use App\Shop\Provinces\Repositories\Interfaces\ProvinceRepositoryInterface;
 
 class AddressController extends Controller
 {
@@ -31,8 +33,7 @@ class AddressController extends Controller
         CountryRepositoryInterface $countryRepository,
         ProvinceRepositoryInterface $provinceRepository,
         CityRepositoryInterface $cityRepository
-    )
-    {
+    ) {
         $this->addressRepo = $addressRepository;
         $this->customerRepo = $customerRepository;
         $this->countryRepo = $countryRepository;
@@ -46,9 +47,17 @@ class AddressController extends Controller
      */
     public function index()
     {
-        $lists = $this->addressRepo->listAddress('created_at', 'desc')->all();
+        $list = $this->addressRepo->listAddress('created_at', 'desc');
 
-        return view('admin.addresses.list', ['addresses' => $this->addressRepo->paginateArrayResults($lists)]);
+        if (request()->has('q')) {
+            $list = $this->addressRepo->searchAddress(request()->input('q'));
+        }
+
+        $addresses = $list->map(function (Address $address) {
+            return $this->transformAddress($address);
+        })->all();
+
+        return view('admin.addresses.list', ['addresses' => $this->addressRepo->paginateArrayResults($addresses)]);
     }
 
     /**
@@ -59,10 +68,14 @@ class AddressController extends Controller
     public function create()
     {
         $countries = $this->countryRepo->listCountries();
-        $philippines = $countries->find(['id' => env('COUNTRY_ID')])->first();
-        $countries->prepend($philippines);
+        $country = $this->countryRepo->findCountryById(1);
 
-        $country = $this->countryRepo->findCountryById($philippines->id);
+        if (env('COUNTRY_ID')) {
+            $philippines = $countries->find(['id' => env('COUNTRY_ID')])->first();
+            $countries->prepend($philippines);
+            $country = $this->countryRepo->findCountryById($philippines->id);
+        }
+
         $customers = $this->customerRepo->listCustomers();
 
         return view('admin.addresses.create', [
@@ -107,9 +120,15 @@ class AddressController extends Controller
     public function edit(int $id)
     {
         $countries = $this->countryRepo->listCountries();
-        $philippines = $countries->find(['id' => env('COUNTRY_ID')])->first();
 
-        $countryRepo = new CountryRepository($philippines);
+        $country = $countries->filter(function ($country) {
+            return $country == env('COUNTRY_ID', 1);
+        })->first();
+
+        $countryRepo = new CountryRepository(new Country());
+        if (!empty($country)) {
+            $countryRepo = new CountryRepository($country);
+        }
 
         $address = $this->addressRepo->findAddressById($id);
         $addressRepo = new AddressRepository($address);

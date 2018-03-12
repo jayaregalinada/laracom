@@ -1,35 +1,46 @@
 <div class="row">
     <div class="col-md-6">
-        <ul id="thumbnails" class="col-md-2 list-unstyled">
+        <ul id="thumbnails" class="col-md-4 list-unstyled">
             <li>
                 <a href="javascript: void(0)">
                     @if(isset($product->cover))
                     <img class="img-responsive img-thumbnail"
-                         src="{{ asset("uploads/$product->cover") }}"
+                         src="{{ asset("storage/$product->cover") }}"
                          alt="{{ $product->name }}" />
-                        @else
+                    @else
                     <img class="img-responsive img-thumbnail"
                          src="{{ asset("https://placehold.it/180x180") }}"
                          alt="{{ $product->name }}" />
                     @endif
                 </a>
             </li>
+            @if(isset($images) && !$images->isEmpty())
+                @foreach($images as $image)
+                <li>
+                    <a href="javascript: void(0)">
+                    <img class="img-responsive img-thumbnail"
+                         src="{{ asset("storage/$image->src") }}"
+                         alt="{{ $product->name }}" />
+                    </a>
+                </li>
+                @endforeach
+            @endif
         </ul>
-        <figure class="text-center product-cover-wrap col-md-10">
+        <figure class="text-center product-cover-wrap col-md-8">
             @if(isset($product->cover))
                 <img id="main-image" class="product-cover img-responsive"
-                     src="{{ asset("uploads/$product->cover") }}?w=400"
-                     data-zoom="{{ asset("uploads/$product->cover") }}?w=1200">
+                     src="{{ asset("storage/$product->cover") }}?w=400"
+                     data-zoom="{{ asset("storage/$product->cover") }}?w=1200">
             @else
                 <img id="main-image" class="product-cover" src="https://placehold.it/300x300"
-                     data-zoom="{{ asset("uploads/$product->cover") }}?w=1200" alt="{{ $product->name }}">
+                     data-zoom="{{ asset("storage/$product->cover") }}?w=1200" alt="{{ $product->name }}">
             @endif
         </figure>
     </div>
     <div class="col-md-6">
         <div class="product-description">
             <h1>{{ $product->name }}
-                <small>Php {{ $product->price }}</small>
+                <small>{{ config('cart.currency') }} {{ $product->price }}</small>
             </h1>
             <div class="description">{{ $product->description }}</div>
             <div class="excerpt">

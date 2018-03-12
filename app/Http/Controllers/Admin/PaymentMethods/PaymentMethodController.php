@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Admin\PaymentMethods;
 
-use App\PaymentMethods\Repositories\Interfaces\PaymentMethodRepositoryInterface;
-use App\PaymentMethods\Repositories\PaymentMethodRepository;
-use App\PaymentMethods\Requests\CreatePaymentMethodRequest;
-use App\PaymentMethods\Requests\UpdatePaymentMethodRequest;
+use App\Shop\PaymentMethods\Repositories\Interfaces\PaymentMethodRepositoryInterface;
+use App\Shop\PaymentMethods\Repositories\PaymentMethodRepository;
+use App\Shop\PaymentMethods\Requests\CreatePaymentMethodRequest;
+use App\Shop\PaymentMethods\Requests\UpdatePaymentMethodRequest;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -95,12 +95,7 @@ class PaymentMethodController extends Controller
      */
     public function destroy($id)
     {
-        try {
-            $this->paymentMethodRepo->delete($id);
-        } catch (QueryException $e) {
-            request()->session()->flash('error', 'Sorry, we cannot delete this payment method since an order used this before.');
-            return redirect()->route('admin.payment-methods.index');
-        }
+        $this->paymentMethodRepo->delete($id);
 
         request()->session()->flash('message', 'Delete successful');
         return redirect()->route('admin.payment-methods.index');

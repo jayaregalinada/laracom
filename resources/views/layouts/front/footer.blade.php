@@ -4,7 +4,7 @@
             <div class="col-md-12 text-center">
 
                 <ul class="footer-menu">
-                    <li> <a href="">Your account</a>  </li>
+                    <li> <a href="{{ route('accounts') }}">Your account</a>  </li>
                     <li> <a href="">Contact us</a>  </li>
                     <li> <a href="">Terms of service</a>  </li>
                 </ul>
@@ -16,15 +16,13 @@
                     <li> <a href=""> <i class="fa fa-pinterest-p" aria-hidden="true"></i>  </a> </li>
                 </ul>
 
-                <p>&copy; {{ config('app.url') }} | All Rights Reserved</p>
+                <p>&copy; <a href="{{ config('app.url') }}">{{ config('app.name') }}</a> | All Rights Reserved</p>
 
             </div>
         </div>
     </div>
 </footer>
 
-<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-<script src="{{ asset('front/js/jquery.min.js') }}"></script>
 <!-- Include all compiled plugins (below), or include individual files as needed -->
 <script src="{{ asset('front/js/bootstrap.min.js') }}"></script>
 <script src="{{ asset('front/js/custom.js') }}"></script>

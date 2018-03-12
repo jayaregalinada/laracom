@@ -12,7 +12,8 @@
 */
 
 /** @var \Illuminate\Database\Eloquent\Factory $factory */
-use App\Categories\Category;
+use App\Shop\Categories\Category;
+use Illuminate\Http\UploadedFile;
 
 $factory->define(Category::class, function (Faker\Generator $faker) {
     $name = $faker->unique()->randomElement([
@@ -30,11 +31,13 @@ $factory->define(Category::class, function (Faker\Generator $faker) {
         'Grocery'
     ]);
 
+    $file = UploadedFile::fake()->image('category.png', 600, 600);
+
     return [
         'name' => $name,
         'slug' => str_slug($name),
         'description' => $faker->paragraph,
-        'cover' => null,
+        'cover' => $file->store('categories', ['disk' => 'public']),
         'status' => 1
     ];
 });

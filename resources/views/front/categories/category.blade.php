@@ -1,5 +1,14 @@
 @extends('layouts.front.app')
 
+@section('og')
+    <meta property="og:type" content="category"/>
+    <meta property="og:title" content="{{ $category->name }}"/>
+    <meta property="og:description" content="{{ $category->description }}"/>
+    @if(!is_null($category->cover))
+        <meta property="og:image" content="{{ asset("storage/$category->cover") }}"/>
+    @endif
+@endsection
+
 @section('content')
     <div class="container">
         <hr>
@@ -17,7 +26,7 @@
             <div class="row">
                 <div class="category-image">
                     @if(isset($category->cover))
-                        <img src="{{ asset("uploads/$category->cover") }}" alt="{{ $category->name }}" class="img-responsive" />
+                        <img src="{{ asset("storage/$category->cover") }}" alt="{{ $category->name }}" class="img-responsive" />
                     @else
                         <img src="https://placehold.it/1200x200" alt="{{ $category->cover }}" class="img-responsive" />
                     @endif

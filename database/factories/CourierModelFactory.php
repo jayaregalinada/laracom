@@ -12,15 +12,15 @@
 */
 
 /** @var \Illuminate\Database\Eloquent\Factory $factory */
-use App\Couriers\Courier;
+use App\Shop\Couriers\Courier;
 
 $factory->define(Courier::class, function (Faker\Generator $faker) {
 
     return [
         'name' => $faker->company,
         'description' => $faker->paragraph,
-        'url' => $faker->sentence,
-        'is_free' => 0,
+        'url' => $faker->url,
+        'is_free' => 1,
         'status' => 1
     ];
 });

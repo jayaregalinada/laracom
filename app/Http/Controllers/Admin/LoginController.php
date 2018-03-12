@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Admins\Requests\LoginRequest;
+use App\Shop\Admins\Requests\LoginRequest;
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 
@@ -17,12 +17,18 @@ class LoginController extends Controller
      */
     protected $redirectTo = '/admin';
 
+
     /**
      * Shows the admin login form
      *
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function showLoginForm() {
+    public function showLoginForm()
+    {
+        if (auth()->guard('admin')->check()) {
+            return redirect()->route('admin.dashboard');
+        }
+
         return view('auth.admin.login');
     }
 

@@ -10,17 +10,25 @@
                     <input type="hidden" name="_method" value="put">
                     {{ csrf_field() }}
                     <div class="form-group">
+                        <label for="parent">Parent Category</label>
+                        <select name="parent" id="parent" class="form-control select2">
+                            @foreach($categories as $cat)
+                                <option @if($cat->id == $category->parent_id) selected="selected" @endif value="{{$cat->id}}">{{$cat->name}}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label for="name">Name <span class="text-danger">*</span></label>
                         <input type="text" name="name" id="name" placeholder="Name" class="form-control" value="{!! $category->name ?: old('name')  !!}">
                     </div>
                     <div class="form-group">
                         <label for="description">Description </label>
-                        <textarea class="form-control" name="description" id="description" rows="5" placeholder="Description">{!! $category->description ?: old('description')  !!}</textarea>
+                        <textarea class="form-control ckeditor" name="description" id="description" rows="5" placeholder="Description">{!! $category->description ?: old('description')  !!}</textarea>
                     </div>
                     @if(isset($category->cover))
                     <div class="form-group">
-                        <img src="{{ asset("uploads/$category->cover") }}" alt="" class="img-responsive"> <br/>
-                        <a onclick="return confirm('Are you sure?')" href="{{ route('category.remove.image', ['category' => $category->id]) }}" class="btn btn-danger">Remove image?</a>
+                        <img src="{{ asset("storage/$category->cover") }}" alt="" class="img-responsive"> <br/>
+                        <a onclick="return confirm('Are you sure?')" href="{{ route('admin.category.remove.image', ['category' => $category->id]) }}" class="btn btn-danger">Remove image?</a>
                     </div>
                     @endif
                     <div class="form-group">

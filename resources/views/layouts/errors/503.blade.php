@@ -47,8 +47,8 @@
 <body>
 <div class="flex-center position-ref full-height">
     <div class="content">
-        <div class="title">
-            <p>Ooops, we are on maintenance.</p> Please check again later.
+        <div class="title error500">
+            <p>Ooops, server error occurred.</p> Please check again later.
         </div>
     </div>
 </div>

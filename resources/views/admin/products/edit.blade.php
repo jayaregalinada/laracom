@@ -22,17 +22,38 @@
                             </div>
                             <div class="form-group">
                                 <label for="description">Description </label>
-                                <textarea class="form-control" name="description" id="description" rows="5" placeholder="Description">{!! $product->description ?: old('description')  !!}</textarea>
+                                <textarea class="form-control ckeditor" name="description" id="description" rows="5" placeholder="Description">{!! $product->description ?: old('description')  !!}</textarea>
                             </div>
                             <div class="form-group">
                                 @if(isset($product->cover))
-                                    <img src="{{ asset("uploads/$product->cover") }}" alt="" class="img-responsive"> <br />
-                                    <a onclick="return confirm('Are you sure?')" href="{{ route('product.remove.image', ['product' => $product->id, 'image' => substr($product->cover, 9)]) }}" class="btn btn-danger">Remove image?</a>
+                                    <div class="col-md-3">
+                                        <div class="row">
+                                            <img src="{{ asset("storage/$product->cover") }}" alt="" class="img-responsive"> <br />
+                                            <a onclick="return confirm('Are you sure?')" href="{{ route('admin.product.remove.image', ['product' => $product->id, 'image' => substr($product->cover, 9)]) }}" class="btn btn-danger btn-sm btn-block">Remove image?</a><br />
+                                        </div>
+                                    </div>
                                 @endif
                             </div>
+                            <div class="row"></div>
                             <div class="form-group">
                                 <label for="cover">Cover </label>
                                 <input type="file" name="cover" id="cover" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                @foreach($images as $image)
+                                    <div class="col-md-3">
+                                        <div class="row">
+                                            <img src="{{ asset("storage/$image->src") }}" alt="" class="img-responsive"> <br />
+                                            <a onclick="return confirm('Are you sure?')" href="{{ route('admin.product.remove.thumb', ['src' => $image->src]) }}" class="btn btn-danger btn-sm btn-block">Remove?</a><br />
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <div class="row"></div>
+                            <div class="form-group">
+                                <label for="image">Images </label>
+                                <input type="file" name="image[]" id="image" class="form-control" multiple>
+                                <span class="text-warning">You can use ctr (cmd) to select multiple images</span>
                             </div>
                             <div class="form-group">
                                 <label for="quantity">Quantity <span class="text-danger">*</span></label>
@@ -54,7 +75,8 @@
                             </div>
                         </div>
                         <div class="col-md-4">
-                            @include('admin.shared.categories', ['categories' => $categories])
+                            <h2>Categories</h2>
+                            @include('admin.shared.categories', ['categories' => $categories, 'ids' => $product])
                         </div>
                     </div>
                 </div>

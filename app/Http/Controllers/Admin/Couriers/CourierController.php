@@ -2,19 +2,23 @@
 
 namespace App\Http\Controllers\Admin\Couriers;
 
-use App\Countries\Repositories\CountryRepository;
-use App\Couriers\Repositories\CourierRepository;
-use App\Couriers\Repositories\Interfaces\CourierRepositoryInterface;
-use App\Couriers\Requests\CreateCourierRequest;
-use App\Couriers\Requests\UpdateCourierRequest;
-use Illuminate\Database\QueryException;
-use Illuminate\Http\Request;
+use App\Shop\Couriers\Repositories\CourierRepository;
+use App\Shop\Couriers\Repositories\Interfaces\CourierRepositoryInterface;
+use App\Shop\Couriers\Requests\CreateCourierRequest;
+use App\Shop\Couriers\Requests\UpdateCourierRequest;
 use App\Http\Controllers\Controller;
 
 class CourierController extends Controller
 {
+    /**
+     * @var CourierRepositoryInterface
+     */
     private $courierRepo;
 
+    /**
+     * CourierController constructor.
+     * @param CourierRepositoryInterface $courierRepository
+     */
     public function __construct(CourierRepositoryInterface $courierRepository)
     {
         $this->courierRepo = $courierRepository;
@@ -91,12 +95,7 @@ class CourierController extends Controller
      */
     public function destroy(int $id)
     {
-        try {
-            $this->courierRepo->delete($id);
-        } catch (QueryException $e) {
-            request()->session()->flash('error', 'Sorry, we cannot delete this courier since an order used this before.');
-            return redirect()->route('admin.couriers.index');
-        }
+        $this->courierRepo->delete($id);
 
         request()->session()->flash('message', 'Delete successful');
         return redirect()->route('admin.couriers.index');

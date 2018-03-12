@@ -25,20 +25,56 @@
                                 <th class="col-md-1"></th>
                                 <th class="col-md-2">Price</th>
                             </thead>
+                            <tfoot>
+                            <tr>
+                                <td class="bg-warning">Subtotal</td>
+                                <td class="bg-warning"></td>
+                                <td class="bg-warning"></td>
+                                <td class="bg-warning"></td>
+                                <td class="bg-warning"></td>
+                                <td class="bg-warning">{{config('cart.currency')}} {{ $subtotal }}</td>
+                            </tr>
+                            @if(isset($shippingFee) && $shippingFee != 0)
+                            <tr>
+                                <td class="bg-warning">Shipping</td>
+                                <td class="bg-warning"></td>
+                                <td class="bg-warning"></td>
+                                <td class="bg-warning"></td>
+                                <td class="bg-warning"></td>
+                                <td class="bg-warning">{{config('cart.currency')}} {{ $shippingFee }}</td>
+                            </tr>
+                            @endif
+                            <tr>
+                                <td class="bg-warning">Tax</td>
+                                <td class="bg-warning"></td>
+                                <td class="bg-warning"></td>
+                                <td class="bg-warning"></td>
+                                <td class="bg-warning"></td>
+                                <td class="bg-warning">{{config('cart.currency')}} {{ number_format($tax, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td class="bg-success">Total</td>
+                                <td class="bg-success"></td>
+                                <td class="bg-success"></td>
+                                <td class="bg-success"></td>
+                                <td class="bg-success"></td>
+                                <td class="bg-success">{{config('cart.currency')}} {{ $total }}</td>
+                            </tr>
+                            </tfoot>
                             <tbody>
                             @foreach($products as $product)
                                 <tr>
                                     <td>
-                                        <a href="{{ route('front.get.product', $product->product->slug) }}" class="hover-border">
-                                            @if(isset($product->product->cover))
-                                                <img src="{{ asset("uploads/$product->cover") }}" alt="{{ $product->name }}" class="img-responsive img-thumbnail">
+                                        <a href="{{ route('front.get.product', [$product->slug]) }}" class="hover-border">
+                                            @if(isset($product->cover))
+                                                <img src="{{ asset("storage/$product->cover") }}" alt="{{ $product->name }}" class="img-responsive img-thumbnail">
                                             @else
                                                 <img src="https://placehold.it/120x120" alt="" class="img-responsive img-thumbnail">
                                             @endif
                                         </a>
                                     </td>
                                     <td>{{ $product->name }}</td>
-                                    <td>{{ $product->product->description }}</td>
+                                    <td>{{ $product->description }}</td>
                                     <td>
                                         <form action="{{ route('cart.update', $product->rowId) }}" class="form-inline" method="post">
                                             {{ csrf_field() }}
@@ -56,35 +92,9 @@
                                             <button onclick="return confirm('Are you sure?')" class="btn btn-danger"><i class="fa fa-times"></i></button>
                                         </form>
                                     </td>
-                                    <td>Php {{ number_format($product->product->price, 2) }}</td>
+                                    <td>{{config('cart.currency')}} {{ number_format($product->price, 2) }}</td>
                                 </tr>
                             @endforeach
-                            </tbody>
-                            <tbody>
-                                <tr>
-                                    <td class="bg-warning">Subtotal</td>
-                                    <td class="bg-warning"></td>
-                                    <td class="bg-warning"></td>
-                                    <td class="bg-warning"></td>
-                                    <td class="bg-warning"></td>
-                                    <td class="bg-warning">Php {{ $subtotal }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="bg-warning">Tax</td>
-                                    <td class="bg-warning"></td>
-                                    <td class="bg-warning"></td>
-                                    <td class="bg-warning"></td>
-                                    <td class="bg-warning"></td>
-                                    <td class="bg-warning">Php {{ number_format($tax, 2) }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="bg-success">Total</td>
-                                    <td class="bg-success"></td>
-                                    <td class="bg-success"></td>
-                                    <td class="bg-success"></td>
-                                    <td class="bg-success"></td>
-                                    <td class="bg-success">Php {{ $total }}</td>
-                                </tr>
                             </tbody>
                         </table>
                         <hr>

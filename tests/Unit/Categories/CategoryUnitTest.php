@@ -2,26 +2,61 @@
 
 namespace Tests\Unit\Categories;
 
-use App\Categories\Category;
-use App\Categories\Exceptions\CategoryInvalidArgumentException;
-use App\Categories\Exceptions\CategoryNotFoundException;
-use App\Categories\Repositories\CategoryRepository;
+use App\Shop\Categories\Category;
+use App\Shop\Categories\Exceptions\CategoryInvalidArgumentException;
+use App\Shop\Categories\Exceptions\CategoryNotFoundException;
+use App\Shop\Categories\Repositories\CategoryRepository;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 class CategoryUnitTest extends TestCase
 {
     /** @test */
+    public function it_can_get_the_child_categories()
+    {
+        $parent = factory(Category::class)->create();
+
+        $child = factory(Category::class)->create([
+            'parent_id' => $parent->id
+        ]);
+
+        $categoryRepo = new CategoryRepository($parent);
+        $children = $categoryRepo->findChildren();
+
+        foreach ($children as $c) {
+            $this->assertInstanceOf(Category::class, $c);
+            $this->assertEquals($child->id, $c->id);
+        }
+    }
+
+    /** @test */
+    public function it_can_get_the_parent_category()
+    {
+        $parent = factory(Category::class)->create();
+
+        $child = factory(Category::class)->create([
+            'parent_id' => $parent->id
+        ]);
+
+        $categoryRepo = new CategoryRepository($child);
+        $found = $categoryRepo->findParentCategory();
+
+        $this->assertInstanceOf(Category::class, $found);
+        $this->assertEquals($parent->id, $child->parent_id);
+    }
+
+    /** @test */
     public function it_can_return_products_in_the_category()
     {
         $category = new CategoryRepository($this->category);
         $category->syncProducts([$this->product->id]);
-        $products = $category->findProductsInCategory($this->category->id);
+        $products = $category->findProducts();
 
         foreach ($products as $product) {
             $this->assertEquals($this->product->id, $product->id);
         }
     }
-    
+
     /** @test */
     public function it_errors_looking_for_the_category_if_the_slug_is_not_found()
     {
@@ -30,7 +65,7 @@ class CategoryUnitTest extends TestCase
         $category = new CategoryRepository($this->category);
         $category->findCategoryBySlug(['slug' => 'unknown']);
     }
-    
+
     /** @test */
     public function it_can_get_the_category_by_slug()
     {
@@ -48,7 +83,7 @@ class CategoryUnitTest extends TestCase
 
         $this->assertDatabaseHas('categories', ['cover' => null]);
     }
-    
+
     /** @test */
     public function it_can_detach_the_products()
     {
@@ -57,11 +92,7 @@ class CategoryUnitTest extends TestCase
         $category->detachProducts();
 
         $products = $category->findProducts();
-
-        foreach ($products as $product) {
-            $this->assertNotEquals($this->product->name, $product->name);
-        }
-
+        $this->assertCount(0, $products);
     }
 
     /** @test */
@@ -99,10 +130,17 @@ class CategoryUnitTest extends TestCase
     /** @test */
     public function it_can_list_all_the_categories()
     {
-        $category = new CategoryRepository(new Category);
-        $list = $category->listCategories();
+        $category = factory(Category::class)->create();
+        $attributes = $category->getFillable();
 
-        $this->arrayHasKey(array_keys($list));
+        $categoryRepo = new CategoryRepository(new Category);
+        $categories = $categoryRepo->listCategories();
+
+        $categories->each(function ($category, $key) use($attributes) {
+            foreach ($category->getFillable() as $key => $value) {
+                $this->assertArrayHasKey($key, $attributes);
+            }
+        });
     }
 
     /** @test */
@@ -131,11 +169,16 @@ class CategoryUnitTest extends TestCase
     /** @test */
     public function it_can_update_the_category()
     {
+        $cover = UploadedFile::fake()->image('file.png', 600, 600);
+        $parent = factory(Category::class)->create();
+
         $params = [
             'name' => 'Boys',
             'slug' => 'boys',
             'description' => $this->faker->paragraph,
-            'status' => 1
+            'status' => 1,
+            'parent' => $parent->id,
+            'cover' => $cover
         ];
 
         $category = new CategoryRepository($this->category);
@@ -146,18 +189,23 @@ class CategoryUnitTest extends TestCase
         $this->assertEquals($params['slug'], $updated->slug);
         $this->assertEquals($params['description'], $updated->description);
         $this->assertEquals($params['status'], $updated->status);
-
-        $this->assertDatabaseHas('categories', $params);
+        $this->assertEquals($params['parent'], $updated->parent_id);
+        $this->assertEquals($params['cover'], $cover);
     }
 
     /** @test */
     public function it_can_create_a_category()
     {
+        $cover = UploadedFile::fake()->image('file.png', 600, 600);
+        $parent = factory(Category::class)->create();
+
         $params = [
             'name' => 'Boys',
             'slug' => 'boys',
+            'cover' => $cover,
             'description' => $this->faker->paragraph,
-            'status' => 1
+            'status' => 1,
+            'parent' => $parent->id
         ];
 
         $category = new CategoryRepository(new Category);
@@ -168,7 +216,7 @@ class CategoryUnitTest extends TestCase
         $this->assertEquals($params['slug'], $created->slug);
         $this->assertEquals($params['description'], $created->description);
         $this->assertEquals($params['status'], $created->status);
-
-        $this->assertDatabaseHas('categories', $params);
+        $this->assertEquals($params['parent'], $created->parent_id);
+        $this->assertEquals($params['cover'], $cover);
     }
 }

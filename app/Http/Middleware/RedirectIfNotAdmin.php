@@ -17,8 +17,9 @@ class RedirectIfNotAdmin
      */
     public function handle($request, Closure $next, $guard = 'admin')
     {
-        if (!Auth::guard($guard)->check()) {
-            return redirect('admin/login');
+        if (!auth()->guard($guard)->check()) {
+            $request->session()->flash('error', 'You must be an employee to see this page');
+            return redirect(route('admin.login'));
         }
 
         return $next($request);
