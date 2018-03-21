@@ -10,15 +10,15 @@
             <div class="box">
                 <div class="box-body">
                     <table class="table">
-                        <tbody>
-                        <tr>
-                            <td class="col-md-2">Name</td>
-                            <td class="col-md-3">Description</td>
-                            <td class="col-md-3">Cover</td>
-                            <td class="col-md-2">Quantity</td>
-                            <td class="col-md-2">Price</td>
-                        </tr>
-                        </tbody>
+                        <thead>
+                            <tr>
+                                <td class="col-md-2">Name</td>
+                                <td class="col-md-3">Description</td>
+                                <td class="col-md-3">Cover</td>
+                                <td class="col-md-2">Quantity</td>
+                                <td class="col-md-2">Price</td>
+                            </tr>
+                        </thead>
                         <tbody>
                             <tr>
                                 <td>{{ $product->name }}</td>
@@ -29,7 +29,7 @@
                                     @endif
                                 </td>
                                 <td>{{ $product->quantity }}</td>
-                                <td>Php {{ $product->price }}</td>
+                                <td>{{ config('cart.currency') }} {{ $product->price }}</td>
                             </tr>
                         </tbody>
                     </table>

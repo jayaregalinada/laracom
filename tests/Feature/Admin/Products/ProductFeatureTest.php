@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Shop\Categories\Category;
-use App\Shop\ProductImages\ProductImage;
 use App\Shop\Products\Product;
 use App\Shop\Products\Repositories\ProductRepository;
 use Illuminate\Http\UploadedFile;
@@ -65,7 +64,7 @@ class ProductFeatureTest extends TestCase
 
         $this
             ->actingAs($this->employee, 'admin')
-            ->get(route('admin.product.remove.thumb',  ['src' => $image->src]))
+            ->get(route('admin.product.remove.thumb', ['src' => $image->src]))
             ->assertStatus(302)
             ->assertRedirect(url('/'))
             ->assertSessionHas('message', 'Image delete successful');

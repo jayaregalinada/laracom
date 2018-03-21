@@ -2,7 +2,9 @@
 
 namespace App\Shop\Products\Repositories;
 
+use App\Shop\AttributeValues\AttributeValue;
 use App\Shop\Base\BaseRepository;
+use App\Shop\ProductAttributes\ProductAttribute;
 use App\Shop\ProductImages\ProductImage;
 use App\Shop\Products\Exceptions\ProductInvalidArgumentException;
 use App\Shop\Products\Exceptions\ProductNotFoundException;
@@ -69,7 +71,7 @@ class ProductRepository extends BaseRepository implements ProductRepositoryInter
     public function updateProduct(array $params, int $id) : bool
     {
         try {
-            return $this->model->update($params);
+            return $this->update($params, $id);
         } catch (QueryException $e) {
             throw new ProductInvalidArgumentException($e->getMessage());
         }
@@ -203,6 +205,77 @@ class ProductRepository extends BaseRepository implements ProductRepositoryInter
                 'src' => $filename
             ]);
             $product->images()->save($productImage);
+        });
+    }
+
+    /**
+     * Associate the product attribute to the product
+     *
+     * @param ProductAttribute $productAttribute
+     * @return ProductAttribute
+     */
+    public function saveProductAttributes(ProductAttribute $productAttribute) : ProductAttribute
+    {
+        return $this->model->attributes()->save($productAttribute);
+    }
+
+    /**
+     * List all the product attributes associated with the product
+     *
+     * @return Collection
+     */
+    public function listProductAttributes() : Collection
+    {
+        return $this->model->attributes()->get();
+    }
+
+    /**
+     * Delete the attribute from the product
+     *
+     * @param ProductAttribute $productAttribute
+     * @return bool|null
+     */
+    public function removeProductAttribute(ProductAttribute $productAttribute) : ?bool
+    {
+        return $productAttribute->delete();
+    }
+
+    /**
+     * @param ProductAttribute $productAttribute
+     * @param \App\Shop\AttributeValues\AttributeValue[] ...$attributeValues
+     * @return Collection
+     */
+    public function saveCombination(ProductAttribute $productAttribute, AttributeValue ...$attributeValues) : Collection
+    {
+        return collect($attributeValues)->each(function (AttributeValue $value) use ($productAttribute) {
+            return $productAttribute->attributesValues()->save($value);
+        });
+    }
+
+    /**
+     * @return Collection
+     */
+    public function listCombinations() : Collection
+    {
+        return $this->model->attributes()->map(function (ProductAttribute $productAttribute) {
+            return $productAttribute->attributesValues;
+        });
+    }
+
+    /**
+     * @param ProductAttribute $productAttribute
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function findProductCombination(ProductAttribute $productAttribute)
+    {
+        $values = $productAttribute->attributesValues()->get();
+
+        return $values->map(function (AttributeValue $attributeValue) {
+            return $attributeValue;
+        })->keyBy(function (AttributeValue $item) {
+            return strtolower($item->attribute->name);
+        })->transform(function (AttributeValue $value) {
+            return $value->value;
         });
     }
 }

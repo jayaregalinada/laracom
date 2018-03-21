@@ -3,6 +3,8 @@
 namespace Tests\Unit\OrderDetails;
 
 use App\Shop\Addresses\Address;
+use App\Shop\Carts\Repositories\CartRepository;
+use App\Shop\Carts\ShoppingCart;
 use App\Shop\Couriers\Courier;
 use App\Shop\Customers\Customer;
 use App\Shop\OrderDetails\OrderProduct;
@@ -10,7 +12,6 @@ use App\Shop\OrderDetails\Repositories\OrderProductRepository;
 use App\Shop\Orders\Order;
 use App\Shop\Orders\Repositories\OrderRepository;
 use App\Shop\OrderStatuses\OrderStatus;
-use App\Shop\PaymentMethods\PaymentMethod;
 use App\Shop\Products\Product;
 use App\Shop\Products\Repositories\ProductRepository;
 use Tests\TestCase;
@@ -18,13 +19,38 @@ use Tests\TestCase;
 class OrderDetailsUnitTest extends TestCase
 {
     /** @test */
+    public function it_can_build_the_order_details()
+    {
+        $cartRepo = new CartRepository(new ShoppingCart);
+        $cartRepo->addToCart($this->product, 1);
+        $cartRepo->saveCart($this->customer);
+
+        $order = factory(Order::class)->create();
+
+        $orderProductRepo = new OrderProductRepository(new OrderProduct);
+        $orderProductRepo->buildOrderDetails($order, $cartRepo->getCartItems());
+
+        $orderRepo = new OrderRepository(new Order);
+        $products = $orderRepo->findProducts($order);
+
+        $products->each(function (Product $product) {
+            $this->assertEquals($this->product->name, $product->name);
+            $this->assertEquals($this->product->sku, $product->sku);
+            $this->assertEquals($this->product->slug, $product->slug);
+            $this->assertEquals($this->product->description, $product->description);
+            $this->assertEquals($this->product->cover, $product->cover);
+            $this->assertEquals($this->product->price, $product->price);
+            $this->assertEquals($this->product->status, $product->status);
+        });
+    }
+    
+    /** @test */
     public function it_can_show_all_the_products_attached_to_an_order()
     {
         $customer = factory(Customer::class)->create();
         $courier = factory(Courier::class)->create();
         $address = factory(Address::class)->create();
         $orderStatus = factory(OrderStatus::class)->create();
-        $paymentMethod = factory(PaymentMethod::class)->create();
 
         $data = [
             'reference' => $this->faker->uuid,
@@ -32,7 +58,7 @@ class OrderDetailsUnitTest extends TestCase
             'customer_id' => $customer->id,
             'address_id' => $address->id,
             'order_status_id' => $orderStatus->id,
-            'payment_method_id' => $paymentMethod->id,
+            'payment' => 'paypal',
             'discounts' => 10.50,
             'total_products' =>  100,
             'tax' => 10.00,
@@ -80,7 +106,6 @@ class OrderDetailsUnitTest extends TestCase
         $courier = factory(Courier::class)->create();
         $address = factory(Address::class)->create();
         $orderStatus = factory(OrderStatus::class)->create();
-        $paymentMethod = factory(PaymentMethod::class)->create();
 
         $data = [
             'reference' => $this->faker->uuid,
@@ -88,7 +113,7 @@ class OrderDetailsUnitTest extends TestCase
             'customer_id' => $customer->id,
             'address_id' => $address->id,
             'order_status_id' => $orderStatus->id,
-            'payment_method_id' => $paymentMethod->id,
+            'payment' => 'paypal',
             'discounts' => 10.50,
             'total_products' =>  100,
             'tax' => 10.00,

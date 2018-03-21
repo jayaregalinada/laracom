@@ -1,9 +1,10 @@
-[![Build Status](https://img.shields.io/travis/jsdecena/laracom/master.svg)](https://travis-ci.org/jsdecena/laracom)
-[![Build Status](https://img.shields.io/github/forks/jsdecena/laracom.svg)](https://github.com/jsdecena/laracom)
-[![Build Status](https://img.shields.io/github/stars/jsdecena/laracom.svg)](https://github.com/jsdecena/laracom)
-[![Test Coverage](https://img.shields.io/codecov/c/github/jsdecena/laracom/master.svg)](https://codecov.io/github/jsdecena/laracom?branch=master)
-[![Latest Stable Version](https://img.shields.io/packagist/v/jsdecena/laracom.svg)](https://packagist.org/packages/jsdecena/laracom)
-[![License](https://img.shields.io/packagist/l/jsdecena/laracom.svg)](https://packagist.org/packages/jsdecena/laracom)
+[![Build Status](https://travis-ci.org/Laracommerce/laracom.svg?branch=master)](https://travis-ci.org/Laracommerce/laracom)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/Laracommerce/laracom/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/Laracommerce/laracom/?branch=master)
+[![Code Intelligence Status](https://scrutinizer-ci.com/g/Laracommerce/laracom/badges/code-intelligence.svg?b=master)](https://scrutinizer-ci.com/code-intelligence)
+[![Test Coverage](https://img.shields.io/codecov/c/github/Laracommerce/laracom/master.svg)](https://codecov.io/github/Laracommerce/laracom?branch=master)
+
+[![Fork Status](https://img.shields.io/github/forks/Laracommerce/laracom.svg)](https://github.com/Laracommerce/laracom)
+[![Star Status](https://img.shields.io/github/stars/Laracommerce/laracom.svg)](https://github.com/Laracommerce/laracom)
 [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/larac0m/Lobby)
 
 # Laravel FREE E-Commerce Software
@@ -70,7 +71,11 @@
     - Mobile responsive design for the admin and front store
     - Access anywhere your admin and front store
 
-## Support on Beerpay
-Hey dude! Help me out for a couple of :beers:!
+# BUILD AND COMPILE ASSETS
 
-[![Beerpay](https://www.dropbox.com/s/srxfghrj3apeajt/bp.png?raw=1)](https://beerpay.io/jsdecena/laracom)
+- Run: `npm install`
+
+- Then: `npm run dev` for dev environment and `npm run production` for live. Wait for it to be compiled and refresh the page. 
+
+## Support open source
+[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=jeff.decena@yahoo.com&item_name=Laracom%20E-Commerce%20development&bn=PP-DonationsBF:btn_donateCC_LG.gif:NonHostedGuest)

@@ -14,9 +14,11 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ config('app.name') }}</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
-    <link href="{{ asset('front/css/bootstrap.min.css') }}" rel="stylesheet">
-    <link href="{{ asset('front/style.css') }}" rel="stylesheet">
+    <title>Laracom - Laravel FREE E-Commerce Software</title>
+    <meta name="description" content="Modern open-source e-commerce framework for free">
+    <meta name="tags" content="modern, opensource, open-source, e-commerce, framework, free, laravel, php, php7, symfony, shop, shopping, responsive, fast, software, blade, cart, test driven, adminlte, storefront">
+    <meta name="author" content="Jeff Simons Decena">
+    <link href="{{ asset('css/style.min.css') }}" rel="stylesheet">
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -45,10 +47,15 @@
     <meta property="og:url" content="{{ request()->url() }}"/>
     @yield('og')
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="{{ asset('front/js/jquery.min.js') }}"></script>
+    <script src="{{ asset('https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js') }}"></script>
 </head>
 <body>
-
+<noscript>
+    <p class="alert alert-danger">
+        You need to turn on your javascript. Some functionality will not work if this is disabled.
+        <a href="https://www.enable-javascript.com/" target="_blank">Read more</a>
+    </p>
+</noscript>
 <section>
     <div class="row hidden-xs">
         <div class="container">
@@ -96,7 +103,8 @@
 
 @include('layouts.front.footer')
 
-@section('js')
-@show
+<script src="{{ asset('js/front.min.js') }}"></script>
+<script src="{{ asset('js/custom.js') }}"></script>
+@yield('js')
 </body>
 </html>
