@@ -167,6 +167,8 @@ return [
         App\Providers\GlobalTemplateServiceProvider::class,
         App\Providers\RepositoryServiceProvider::class,
         Laratrust\LaratrustServiceProvider::class,
+        App\Providers\AdminServiceProvider::class,
+        App\Providers\FrontServiceProvider::class,
     ],
 
     /*
